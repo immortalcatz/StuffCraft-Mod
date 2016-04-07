@@ -1,4 +1,4 @@
-package dr_detonation.stuffcraft.steel;
+package dr_detonation.stuffcraft.scuba;
 
 import dr_detonation.stuffcraft.StuffCraft;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -10,27 +10,24 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.world.World;
 
-public class ItemSteelArmor extends ItemArmor {
+public class ItemScuba extends ItemArmor {
 
-	public ItemSteelArmor(ArmorMaterial material, int render, int type) {
+	public ItemScuba(ArmorMaterial material, int render, int type) {
 		super(material, render, type);
 	}
-	
+
 	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String type) {
-		if (this.armorType == 2) {
-			return "sc:textures/models/armor/steelarmortwo.png";
-		}
-		return "sc:textures/models/armor/steelarmorone.png";
+		return "sc:textures/models/armor/scuba.png";
 	}
 	
 	@Override
 	public void onArmorTick(World world, EntityPlayer player, ItemStack stack) {
-		if (stack.getItem() == StuffCraft.steelBoots) {
-			int j = EnchantmentHelper.getEnchantmentLevel(StuffCraft.superSpeed.effectId, stack);
+		if (stack.getItem() == StuffCraft.scuba) {
+			int j = EnchantmentHelper.getEnchantmentLevel(StuffCraft.scubaMask.effectId, stack);
 			if (j > 0) {
-				player.addPotionEffect(new PotionEffect(Potion.moveSpeed.getId(), 50, j - 1));
+				player.addPotionEffect(new PotionEffect(Potion.waterBreathing.getId(), 50, j - 1));
 			}
 		}
 	}
-
+	
 }

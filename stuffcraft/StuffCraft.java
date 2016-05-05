@@ -4,19 +4,22 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.Mod.Metadata;
-import cpw.mods.fml.common.ModMetadata;
+import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import dr_detonation.stuffcraft.emerald.ItemEmeraldAxe;
 import dr_detonation.stuffcraft.emerald.ItemEmeraldHoe;
 import dr_detonation.stuffcraft.emerald.ItemEmeraldPickaxe;
 import dr_detonation.stuffcraft.emerald.ItemEmeraldShovel;
 import dr_detonation.stuffcraft.emerald.ItemEmeraldSword;
+import dr_detonation.stuffcraft.entity.bee.EntityBee;
+import dr_detonation.stuffcraft.entity.ghost.EntityGhost;
+import dr_detonation.stuffcraft.entity.nautilus.EntityNautilus;
 import dr_detonation.stuffcraft.kevlar.ItemKevlarArmor;
+import dr_detonation.stuffcraft.nightVision.ItemNightVisionArmor;
+import dr_detonation.stuffcraft.proxy.ServerProxy;
 import dr_detonation.stuffcraft.scuba.ItemScuba;
 import dr_detonation.stuffcraft.silver.ItemSilverAxe;
 import dr_detonation.stuffcraft.silver.ItemSilverHoe;
@@ -31,29 +34,23 @@ import dr_detonation.stuffcraft.steel.ItemSteelPickaxe;
 import dr_detonation.stuffcraft.steel.ItemSteelShovel;
 import dr_detonation.stuffcraft.steel.ItemSteelSword;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemBook;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.Achievement;
 import net.minecraft.stats.AchievementList;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.AchievementPage;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.EnumHelper;
 
-@Mod(modid = "sc", name = "StuffCraft Mod", version = "1.1")
+@Mod(modid = "sc", name = "StuffCraft Mod", version = "1.2.2")
 public class StuffCraft {
 
 	public static Item donut;
@@ -126,7 +123,19 @@ public class StuffCraft {
 	public static Achievement eatGreen;
 	public static Block rubberBlock;
 	public static Block cheeseBlock;
+	public static Block xray;
+	public static Achievement invisible;
+	public static Block asphalt;
+	public static Item pizza;
+	public static Achievement toldYa;
+	public static Item nightVisionHelmet;
+	public static Enchantment nvision;
+	public static Item nautilusShell;
+	public static Item cement;
+	public static Block concrete;
+	public static Block reConcrete;
 	
+	public static final ItemArmor.ArmorMaterial nightHelmetMat = EnumHelper.addArmorMaterial("nightHelmet", 50, new int[]{1,0,0,0}, 33);
 	public static final ItemArmor.ArmorMaterial scubaMat = EnumHelper.addArmorMaterial("scubaMat", 1324, new int[]{3,0,0,0}, 13);
 	public static final Item.ToolMaterial silverToolMat = EnumHelper.addToolMaterial("silverToolMat", 1, 766, 3.4F, 3.5F, 18);
 	public static final Item.ToolMaterial crowbarMat = EnumHelper.addToolMaterial("crowbarMat", 2, 1377, 7.5F, 9.0F, 6);
@@ -135,67 +144,82 @@ public class StuffCraft {
 	public static final Item.ToolMaterial steelToolMat = EnumHelper.addToolMaterial("steelToolMat", 3, 1431, 7.875F, 6.5F, 11);
 	public static final Item.ToolMaterial emeraldToolMat = EnumHelper.addToolMaterial("emeraldToolMat", 3, 1356, 8.0F, 8.0F, 17);
 		
+	@SidedProxy(clientSide = "dr_detonation.stuffcraft.proxy.ClientProxy", serverSide = "dr_detonation.stuffcraft.proxy.ServerProxy")
+	public static ServerProxy serverProxy;
+	
+	@Instance("sc")
+	public static StuffCraft instance;
+	
 	@EventHandler
-	public static void preInit(FMLPreInitializationEvent event) {
-		donut = new ItemFood(3, 4, false).setUnlocalizedName("Donut").setTextureName("sc:donut").setCreativeTab(tabStuffCraft);
-		powderedSugar = new ItemPowderedSugar().setUnlocalizedName("PowderedSugar").setTextureName("sc:powderedsugar").setCreativeTab(tabStuffCraft);
-		compressor = new ItemCompressor().setUnlocalizedName("Compressor").setTextureName("sc:compressor").setCreativeTab(tabStuffCraft);
-		liquidOxygen = new ItemLiquidOxygen().setUnlocalizedName("LiquidOxygen").setTextureName("sc:liquidoxygen").setCreativeTab(tabStuffCraft).setContainerItem(Items.bucket);
-		gatherOxygen = new ItemGather().setUnlocalizedName("GatherOxygen").setTextureName("sc:gather").setCreativeTab(tabStuffCraft);
-		liquidCarbon = new ItemLiquidCarbon().setUnlocalizedName("LiquidCarbon").setTextureName("sc:liquidcarbon").setCreativeTab(tabStuffCraft).setContainerItem(Items.bucket);
-		gatherCarbon = new ItemGatherCarbon().setUnlocalizedName("GatherCarbon").setTextureName("sc:gathercarbon").setCreativeTab(tabStuffCraft);
-		dryIce = new ItemDryIce().setUnlocalizedName("DryIce").setTextureName("sc:dryice").setCreativeTab(tabStuffCraft);
-		emeraldPickaxe = new ItemEmeraldPickaxe(emeraldToolMat).setUnlocalizedName("EmeraldPickaxe").setTextureName("sc:emeraldpickaxe").setCreativeTab(tabStuffCraft);
-		emeraldAxe = new ItemEmeraldAxe(emeraldToolMat).setUnlocalizedName("EmeraldAxe").setTextureName("sc:emeraldaxe").setCreativeTab(tabStuffCraft);
-		emeraldHoe = new ItemEmeraldHoe(emeraldToolMat).setUnlocalizedName("EmeraldHoe").setTextureName("sc:emeraldhoe").setCreativeTab(tabStuffCraft);
-		emeraldShovel = new ItemEmeraldShovel(emeraldToolMat).setUnlocalizedName("EmeraldShovel").setTextureName("sc:emeraldshovel").setCreativeTab(tabStuffCraft);
-		emeraldSword = new ItemEmeraldSword(emeraldToolMat).setUnlocalizedName("EmeraldSword").setTextureName("sc:emeraldsword").setCreativeTab(tabStuffCraft);
-		steelIngot = new ItemSteelIngot().setUnlocalizedName("SteelIngot").setTextureName("sc:steelingot").setCreativeTab(tabStuffCraft);
-		steelBlock = new BlockSteelBlock(Material.iron).setBlockName("SteelBlock").setBlockTextureName("sc:steelblock").setCreativeTab(tabStuffCraft);
-		steelPickaxe = new ItemSteelPickaxe(steelToolMat).setUnlocalizedName("SteelPickaxe").setTextureName("sc:steelpickaxe").setCreativeTab(tabStuffCraft);
-		steelAxe = new ItemSteelAxe(steelToolMat).setUnlocalizedName("SteelAxe").setTextureName("sc:steelaxe").setCreativeTab(tabStuffCraft);
-		steelHoe = new ItemSteelHoe(steelToolMat).setUnlocalizedName("SteelHoe").setTextureName("sc:steelhoe").setCreativeTab(tabStuffCraft);
-		steelShovel = new ItemSteelShovel(steelToolMat).setUnlocalizedName("SteelShovel").setTextureName("sc:steelshovel").setCreativeTab(tabStuffCraft);
-		steelSword = new ItemSteelSword(steelToolMat).setUnlocalizedName("SteelSword").setTextureName("sc:steelsword").setCreativeTab(tabStuffCraft);
-		steelHelmet = new ItemSteelArmor(steelArmorMat, 0, 0).setUnlocalizedName("SteelHelmet").setTextureName("sc:steelhelmet").setCreativeTab(tabStuffCraft);
-		steelChestplate = new ItemSteelArmor(steelArmorMat, 0, 1).setUnlocalizedName("SteelChestplate").setTextureName("sc:steelchestplate").setCreativeTab(tabStuffCraft);
-		steelLeggings = new ItemSteelArmor(steelArmorMat, 0, 2).setUnlocalizedName("SteelLeggings").setTextureName("sc:steelleggings").setCreativeTab(tabStuffCraft);
-		steelBoots = new ItemSteelArmor(steelArmorMat, 0, 3).setUnlocalizedName("SteelBoots").setTextureName("sc:steelboots").setCreativeTab(tabStuffCraft);
-		hotdog = new ItemFood(5, 5, true).setUnlocalizedName("Hotdog").setTextureName("sc:hotdog").setCreativeTab(tabStuffCraft);
-		carbonIngot = new ItemCarbonIngot().setUnlocalizedName("CarbonIngot").setTextureName("sc:carboningot").setCreativeTab(tabStuffCraft);		
-		copperOre = new BlockCopperOre(Material.rock).setBlockName("CopperOre").setBlockTextureName("sc:copperore").setCreativeTab(tabStuffCraft);
-		copperIngot = new ItemCopperIngot().setUnlocalizedName("CopperIngot").setTextureName("sc:copperingot").setCreativeTab(tabStuffCraft);
-		kevlarOreSurface = new BlockKevlarOreSurface(Material.iron).setBlockName("KevlarOreSurface").setBlockTextureName("sc:kevlaroresurface").setCreativeTab(tabStuffCraft);
-		kevlarOreNether = new BlockKevlarOreNether(Material.iron).setBlockName("KevlarOreNether").setBlockTextureName("sc:kevlarorenether").setCreativeTab(tabStuffCraft);
-		kevlarIngot = new ItemKevlarIngot().setUnlocalizedName("KevlarIngot").setTextureName("sc:kevlaringot").setCreativeTab(tabStuffCraft);
-		kevlarVest = new ItemKevlarArmor(kevlarArmorMat, 1, 1).setUnlocalizedName("KevlarVest").setTextureName("sc:kevlarvest").setCreativeTab(tabStuffCraft);
-		loom = new ItemLoom().setUnlocalizedName("Loom").setTextureName("sc:loom").setCreativeTab(tabStuffCraft);
-		kevlarFiber = new ItemKevlarFiber().setUnlocalizedName("KevlarFiber").setTextureName("sc:kevlarfiber").setCreativeTab(tabStuffCraft);
-		crowbar = new ItemCrowbar(crowbarMat).setUnlocalizedName("Crowbar").setTextureName("sc:crowbar").setCreativeTab(tabStuffCraft);
-		cup = new ItemCup().setUnlocalizedName("Cup").setTextureName("sc:cup").setCreativeTab(tabStuffCraft);
-		iformer = new ItemIFormer().setUnlocalizedName("IFormer").setTextureName("sc:iformer").setCreativeTab(tabStuffCraft);
-		coffeeGrounds = new ItemCoffeeGrounds().setUnlocalizedName("CoffeeGrounds").setTextureName("sc:coffeegrounds").setCreativeTab(tabStuffCraft);
-		coffee = new ItemFood(4, 6, false).setUnlocalizedName("Coffee").setTextureName("sc:cupofcoffee").setCreativeTab(tabStuffCraft).setContainerItem(cup);
-		copperWire = new ItemCopperWire().setUnlocalizedName("CopperWire").setTextureName("sc:copperwire").setCreativeTab(tabStuffCraft);
-		copperBlock = new BlockCopperBlock(Material.rock).setBlockName("CopperBlock").setBlockTextureName("sc:copperblock").setCreativeTab(tabStuffCraft);
-		silverIngot = new ItemSilverIngot().setUnlocalizedName("SilverIngot").setTextureName("sc:silveringot").setCreativeTab(tabStuffCraft);		
-		silverOre = new BlockSilverOre(Material.rock).setBlockName("SilverOre").setBlockTextureName("sc:silverore").setCreativeTab(tabStuffCraft);
-		silverPickaxe = new ItemSilverPickaxe(silverToolMat).setUnlocalizedName("SilverPickaxe").setTextureName("sc:silverpickaxe").setCreativeTab(tabStuffCraft);
-		silverAxe = new ItemSilverAxe(silverToolMat).setUnlocalizedName("SilverAxe").setTextureName("sc:silveraxe").setCreativeTab(tabStuffCraft);
-		silverHoe = new ItemSilverHoe(silverToolMat).setUnlocalizedName("SilverHoe").setTextureName("sc:silverhoe").setCreativeTab(tabStuffCraft);
-		silverShovel = new ItemSilverShovel(silverToolMat).setUnlocalizedName("SilverShovel").setTextureName("sc:silvershovel").setCreativeTab(tabStuffCraft);
-		silverSword = new ItemSilverSword(silverToolMat).setUnlocalizedName("SilverSword").setTextureName("sc:silversword").setCreativeTab(tabStuffCraft);
-		cheeseOre = new BlockCheeseOre(Material.rock).setBlockName("CheeseOre").setBlockTextureName("sc:cheeseore").setCreativeTab(tabStuffCraft);
-		cheese = new ItemFood(3, 4, false).setUnlocalizedName("Cheese").setTextureName("sc:cheese").setCreativeTab(tabStuffCraft);
-		kevlarHelmet = new ItemKevlarArmor(kevlarArmorMat, 0, 0).setUnlocalizedName("KevlarHelmet").setTextureName("sc:kevlarhelmet").setCreativeTab(tabStuffCraft);
-		scuba = new ItemScuba(scubaMat, 0, 0).setUnlocalizedName("Scuba").setTextureName("sc:scuba").setCreativeTab(tabStuffCraft);		
-		rubber = new ItemRubber().setUnlocalizedName("Rubber").setTextureName("sc:rubber").setCreativeTab(tabStuffCraft);
-		lettuce = new ItemFood(2, 4, false).setUnlocalizedName("Lettuce").setTextureName("sc:lettuce").setCreativeTab(tabStuffCraft);
-		dressing = new ItemDressing().setUnlocalizedName("Dressing").setTextureName("sc:saladdressing").setCreativeTab(tabStuffCraft);
-		salad = new ItemFood(7, 5, false).setUnlocalizedName("Salad").setTextureName("sc:salad").setCreativeTab(tabStuffCraft).setContainerItem(Items.bowl);
-		rubberBlock = new BlockRubber(Material.leaves).setBlockName("RubberBlock").setBlockTextureName("sc:rubberblock").setCreativeTab(tabStuffCraft);
-		cheeseBlock = new BlockCheese(Material.cloth).setBlockName("CheeseBlock").setBlockTextureName("sc:cheeseblock").setCreativeTab(tabStuffCraft);		
+	public void preInit(FMLPreInitializationEvent event) {
+		donut = new ItemFood(3, 4, false).setUnlocalizedName("Donut").setTextureName("sc:donut").setCreativeTab(tabStuffCraftFood);
+		powderedSugar = new ItemPowderedSugar().setUnlocalizedName("PowderedSugar").setTextureName("sc:powderedsugar").setCreativeTab(tabStuffCraftItems);
+		compressor = new ItemCompressor().setUnlocalizedName("Compressor").setTextureName("sc:compressor").setCreativeTab(tabStuffCraftItems);
+		liquidOxygen = new ItemLiquidOxygen().setUnlocalizedName("LiquidOxygen").setTextureName("sc:liquidoxygen").setCreativeTab(tabStuffCraftItems).setContainerItem(Items.bucket).setMaxStackSize(1);
+		gatherOxygen = new ItemGather().setUnlocalizedName("GatherOxygen").setTextureName("sc:gather").setCreativeTab(tabStuffCraftItems).setMaxStackSize(1);
+		liquidCarbon = new ItemLiquidCarbon().setUnlocalizedName("LiquidCarbon").setTextureName("sc:liquidcarbon").setCreativeTab(tabStuffCraftItems).setContainerItem(Items.bucket).setMaxStackSize(1);
+		gatherCarbon = new ItemGatherCarbon().setUnlocalizedName("GatherCarbon").setTextureName("sc:gathercarbon").setCreativeTab(tabStuffCraftItems).setMaxStackSize(1);
+		dryIce = new ItemDryIce().setUnlocalizedName("DryIce").setTextureName("sc:dryice").setCreativeTab(tabStuffCraftItems);
+		emeraldPickaxe = new ItemEmeraldPickaxe(emeraldToolMat).setUnlocalizedName("EmeraldPickaxe").setTextureName("sc:emeraldpickaxe").setCreativeTab(tabStuffCraftItems);
+		emeraldAxe = new ItemEmeraldAxe(emeraldToolMat).setUnlocalizedName("EmeraldAxe").setTextureName("sc:emeraldaxe").setCreativeTab(tabStuffCraftItems);
+		emeraldHoe = new ItemEmeraldHoe(emeraldToolMat).setUnlocalizedName("EmeraldHoe").setTextureName("sc:emeraldhoe").setCreativeTab(tabStuffCraftItems);
+		emeraldShovel = new ItemEmeraldShovel(emeraldToolMat).setUnlocalizedName("EmeraldShovel").setTextureName("sc:emeraldshovel").setCreativeTab(tabStuffCraftItems);
+		emeraldSword = new ItemEmeraldSword(emeraldToolMat).setUnlocalizedName("EmeraldSword").setTextureName("sc:emeraldsword").setCreativeTab(tabStuffCraftItems);
+		steelIngot = new ItemSteelIngot().setUnlocalizedName("SteelIngot").setTextureName("sc:steelingot").setCreativeTab(tabStuffCraftItems);
+		steelBlock = new BlockSteelBlock(Material.iron).setBlockName("SteelBlock").setBlockTextureName("sc:steelblock").setCreativeTab(tabStuffCraftBlocks);
+		steelPickaxe = new ItemSteelPickaxe(steelToolMat).setUnlocalizedName("SteelPickaxe").setTextureName("sc:steelpickaxe").setCreativeTab(tabStuffCraftItems);
+		steelAxe = new ItemSteelAxe(steelToolMat).setUnlocalizedName("SteelAxe").setTextureName("sc:steelaxe").setCreativeTab(tabStuffCraftItems);
+		steelHoe = new ItemSteelHoe(steelToolMat).setUnlocalizedName("SteelHoe").setTextureName("sc:steelhoe").setCreativeTab(tabStuffCraftItems);
+		steelShovel = new ItemSteelShovel(steelToolMat).setUnlocalizedName("SteelShovel").setTextureName("sc:steelshovel").setCreativeTab(tabStuffCraftItems);
+		steelSword = new ItemSteelSword(steelToolMat).setUnlocalizedName("SteelSword").setTextureName("sc:steelsword").setCreativeTab(tabStuffCraftItems);
+		steelHelmet = new ItemSteelArmor(steelArmorMat, 0, 0).setUnlocalizedName("SteelHelmet").setTextureName("sc:steelhelmet").setCreativeTab(tabStuffCraftItems);
+		steelChestplate = new ItemSteelArmor(steelArmorMat, 0, 1).setUnlocalizedName("SteelChestplate").setTextureName("sc:steelchestplate").setCreativeTab(tabStuffCraftItems);
+		steelLeggings = new ItemSteelArmor(steelArmorMat, 0, 2).setUnlocalizedName("SteelLeggings").setTextureName("sc:steelleggings").setCreativeTab(tabStuffCraftItems);
+		steelBoots = new ItemSteelArmor(steelArmorMat, 0, 3).setUnlocalizedName("SteelBoots").setTextureName("sc:steelboots").setCreativeTab(tabStuffCraftItems);
+		hotdog = new ItemFood(5, 5, true).setUnlocalizedName("Hotdog").setTextureName("sc:hotdog").setCreativeTab(tabStuffCraftFood);
+		carbonIngot = new ItemCarbonIngot().setUnlocalizedName("CarbonIngot").setTextureName("sc:carboningot").setCreativeTab(tabStuffCraftItems);		
+		copperOre = new BlockCopperOre(Material.rock).setBlockName("CopperOre").setBlockTextureName("sc:copperore").setCreativeTab(tabStuffCraftBlocks);
+		copperIngot = new ItemCopperIngot().setUnlocalizedName("CopperIngot").setTextureName("sc:copperingot").setCreativeTab(tabStuffCraftItems);
+		kevlarOreSurface = new BlockKevlarOreSurface(Material.iron).setBlockName("KevlarOreSurface").setBlockTextureName("sc:kevlaroresurface").setCreativeTab(tabStuffCraftBlocks);
+		kevlarOreNether = new BlockKevlarOreNether(Material.iron).setBlockName("KevlarOreNether").setBlockTextureName("sc:kevlarorenether").setCreativeTab(tabStuffCraftBlocks);
+		kevlarIngot = new ItemKevlarIngot().setUnlocalizedName("KevlarIngot").setTextureName("sc:kevlaringot").setCreativeTab(tabStuffCraftItems);
+		kevlarVest = new ItemKevlarArmor(kevlarArmorMat, 1, 1).setUnlocalizedName("KevlarVest").setTextureName("sc:kevlarvest").setCreativeTab(tabStuffCraftItems);
+		loom = new ItemLoom().setUnlocalizedName("Loom").setTextureName("sc:loom").setCreativeTab(tabStuffCraftItems);
+		kevlarFiber = new ItemKevlarFiber().setUnlocalizedName("KevlarFiber").setTextureName("sc:kevlarfiber").setCreativeTab(tabStuffCraftItems);
+		crowbar = new ItemCrowbar(crowbarMat).setUnlocalizedName("Crowbar").setTextureName("sc:crowbar").setCreativeTab(tabStuffCraftItems);
+		cup = new ItemCup().setUnlocalizedName("Cup").setTextureName("sc:cup").setCreativeTab(tabStuffCraftItems);
+		iformer = new ItemIFormer().setUnlocalizedName("IFormer").setTextureName("sc:iformer").setCreativeTab(tabStuffCraftItems);
+		coffeeGrounds = new ItemCoffeeGrounds().setUnlocalizedName("CoffeeGrounds").setTextureName("sc:coffeegrounds").setCreativeTab(tabStuffCraftItems);
+		coffee = new ItemFood(4, 6, false).setUnlocalizedName("Coffee").setTextureName("sc:cupofcoffee").setCreativeTab(tabStuffCraftFood).setContainerItem(cup).setMaxStackSize(1);
+		copperWire = new ItemCopperWire().setUnlocalizedName("CopperWire").setTextureName("sc:copperwire").setCreativeTab(tabStuffCraftItems);
+		copperBlock = new BlockCopperBlock(Material.rock).setBlockName("CopperBlock").setBlockTextureName("sc:copperblock").setCreativeTab(tabStuffCraftBlocks);
+		silverIngot = new ItemSilverIngot().setUnlocalizedName("SilverIngot").setTextureName("sc:silveringot").setCreativeTab(tabStuffCraftItems);		
+		silverOre = new BlockSilverOre(Material.rock).setBlockName("SilverOre").setBlockTextureName("sc:silverore").setCreativeTab(tabStuffCraftBlocks);
+		silverPickaxe = new ItemSilverPickaxe(silverToolMat).setUnlocalizedName("SilverPickaxe").setTextureName("sc:silverpickaxe").setCreativeTab(tabStuffCraftItems);
+		silverAxe = new ItemSilverAxe(silverToolMat).setUnlocalizedName("SilverAxe").setTextureName("sc:silveraxe").setCreativeTab(tabStuffCraftItems);
+		silverHoe = new ItemSilverHoe(silverToolMat).setUnlocalizedName("SilverHoe").setTextureName("sc:silverhoe").setCreativeTab(tabStuffCraftItems);
+		silverShovel = new ItemSilverShovel(silverToolMat).setUnlocalizedName("SilverShovel").setTextureName("sc:silvershovel").setCreativeTab(tabStuffCraftItems);
+		silverSword = new ItemSilverSword(silverToolMat).setUnlocalizedName("SilverSword").setTextureName("sc:silversword").setCreativeTab(tabStuffCraftItems);
+		cheeseOre = new BlockCheeseOre(Material.rock).setBlockName("CheeseOre").setBlockTextureName("sc:cheeseore").setCreativeTab(tabStuffCraftBlocks);
+		cheese = new ItemFood(3, 4, false).setUnlocalizedName("Cheese").setTextureName("sc:cheese").setCreativeTab(tabStuffCraftFood);
+		kevlarHelmet = new ItemKevlarArmor(kevlarArmorMat, 0, 0).setUnlocalizedName("KevlarHelmet").setTextureName("sc:kevlarhelmet").setCreativeTab(tabStuffCraftItems);
+		scuba = new ItemScuba(scubaMat, 0, 0).setUnlocalizedName("Scuba").setTextureName("sc:scuba").setCreativeTab(tabStuffCraftItems);		
+		rubber = new ItemRubber().setUnlocalizedName("Rubber").setTextureName("sc:rubber").setCreativeTab(tabStuffCraftItems);
+		lettuce = new ItemFood(2, 4, false).setUnlocalizedName("Lettuce").setTextureName("sc:lettuce").setCreativeTab(tabStuffCraftFood);
+		dressing = new ItemDressing().setUnlocalizedName("Dressing").setTextureName("sc:saladdressing").setCreativeTab(tabStuffCraftItems);
+		salad = new ItemFood(7, 5, false).setUnlocalizedName("Salad").setTextureName("sc:salad").setCreativeTab(tabStuffCraftFood).setContainerItem(Items.bowl).setMaxStackSize(1);
+		rubberBlock = new BlockRubber(Material.leaves).setBlockName("RubberBlock").setBlockTextureName("sc:rubberblock").setCreativeTab(tabStuffCraftBlocks);
+		cheeseBlock = new BlockCheese(Material.cloth).setBlockName("CheeseBlock").setBlockTextureName("sc:cheeseblock").setCreativeTab(tabStuffCraftBlocks);		
+		xray = new BlockXray(Material.rock).setBlockName("Xray").setCreativeTab(tabStuffCraftBlocks);
+		asphalt = new BlockAsphalt(Material.rock).setBlockName("Asphalt").setBlockTextureName("sc:asphalt").setCreativeTab(tabStuffCraftBlocks);
+		pizza = new ItemFood(12, 6, true).setUnlocalizedName("Pizza").setTextureName("sc:pizza").setCreativeTab(tabStuffCraftFood).setMaxStackSize(1);
+		nightVisionHelmet = new ItemNightVisionArmor(nightHelmetMat, 0, 0).setUnlocalizedName("NightVisionHelmet").setTextureName("sc:nvhelmet").setCreativeTab(tabStuffCraftItems); 
+		nautilusShell = new ItemNautilusShell().setUnlocalizedName("NautilusShell").setTextureName("sc:nautilusshell").setCreativeTab(tabStuffCraftItems);
+		cement = new ItemCement().setUnlocalizedName("Cement").setTextureName("sc:cement").setCreativeTab(tabStuffCraftItems);
+		concrete = new BlockConcrete(Material.rock).setBlockName("Concrete").setBlockTextureName("sc:concrete").setCreativeTab(tabStuffCraftBlocks);
+		reConcrete = new BlockReConcrete(Material.rock).setBlockName("ReConcrete").setBlockTextureName("sc:reconcrete").setCreativeTab(tabStuffCraftBlocks);
 		
+		toldYa = new Achievement("achievement.toldYa", "toldYa", 4, 4, new ItemStack(pizza), getCheese);
 		eatGreen = new Achievement("achievement.eatGreen", "eatGreen", 4, 6, new ItemStack(salad), getCheese);
 		achievementKevlar = new Achievement("achievement.mineKevlar", "mineKevlar", 0, 0, new ItemStack(kevlarIngot), (Achievement)null).initIndependentStat().registerStat();
 		bulletproof = new Achievement("achievement.bulletproof", "bulletproof", 2, 1, new ItemStack(kevlarVest), achievementKevlar).registerStat();
@@ -205,11 +229,19 @@ public class StuffCraft {
 		wiresMeanPower = new Achievement("achievement.wiresMeanPower", "wiresMeanPower", 7, 2, new ItemStack(copperWire), mineCopper).registerStat();
 		getCheese = new Achievement("achievement.getCheese", "getCheese", 0, 4, new ItemStack(cheese), (Achievement)null).initIndependentStat().registerStat();
 		breathe = new Achievement("achievement.breathe", "breathe", 0, 2, new ItemStack(liquidOxygen), AchievementList.buildBetterPickaxe).registerStat();
+		invisible = new Achievement("achievement.invisible", "invisible", 2, 5, new ItemStack(kevlarHelmet), achievementKevlar).registerStat();
+
+		scubaMask = new EnchantmentScubaMask(65, 1, EnumEnchantmentType.armor_head).setName("scubaMask");
+		nvision = new EnchantmentNVision(66, 1, EnumEnchantmentType.armor_head).setName("nvision");
 		
-		invisibility = new EnchantmentInvisibility(64, 2, EnumEnchantmentType.armor_head).setName("invisibility");
-		superSpeed = new EnchantmentSuperSpeed(63, 5, EnumEnchantmentType.armor_feet).setName("speedBoost");
-		scubaMask = new EnchantmentScubaMask(65, 2, EnumEnchantmentType.armor_head).setName("scubaMask");
-		
+		GameRegistry.registerBlock(reConcrete, "ReConcrete");
+		GameRegistry.registerBlock(concrete, "Concrete");
+		GameRegistry.registerItem(cement, "Cement");
+		GameRegistry.registerItem(nautilusShell, "NautilusShell");
+		GameRegistry.registerItem(nightVisionHelmet, "NightVisionHelmet");
+		GameRegistry.registerItem(pizza, "Pizza");
+		GameRegistry.registerBlock(asphalt, "Asphalt");
+		GameRegistry.registerBlock(xray, "Xray");
 		GameRegistry.registerBlock(cheeseBlock, "CheeseBlock");
 		GameRegistry.registerBlock(rubberBlock, "RubberBlock");
 		GameRegistry.registerItem(salad, "Salad");
@@ -269,13 +301,17 @@ public class StuffCraft {
 		GameRegistry.registerItem(powderedSugar, powderedSugar.getUnlocalizedName().substring(5));
 		GameRegistry.registerItem(donut, donut.getUnlocalizedName().substring(5));
 		
+		EntityGhost.mainRegistry();
+		EntityNautilus.mainRegistry();
+		EntityBee.mainRegistry();
+		
 		GameRegistry.registerWorldGenerator(new KevlarNetherOreGen(), 0);
 		GameRegistry.registerWorldGenerator(new CopperOreGen(), 0);
 		GameRegistry.registerWorldGenerator(new KevlarOreGen(), 0);
 		GameRegistry.registerWorldGenerator(new SilverOreGen(), 0);
 		GameRegistry.registerWorldGenerator(new CheeseOreGen(), 0);
 		
-		AchievementPage.registerAchievementPage(new AchievementPage("StuffCraft", new Achievement[]{achievementKevlar, bulletproof, mineCopper, gotSteel, murderStick, wiresMeanPower, getCheese, breathe, eatGreen}));
+		AchievementPage.registerAchievementPage(new AchievementPage("StuffCraft", new Achievement[]{achievementKevlar, bulletproof, mineCopper, gotSteel, murderStick, wiresMeanPower, getCheese, breathe, eatGreen, invisible, toldYa}));
 		
 		FMLCommonHandler.instance().bus().register(new OxygenOnCraftEvent());
 		FMLCommonHandler.instance().bus().register(new WiresOnCraftEvent());
@@ -286,10 +322,19 @@ public class StuffCraft {
 		FMLCommonHandler.instance().bus().register(new CrowbarOnCraftEvent());
 		FMLCommonHandler.instance().bus().register(new CheeseOnMineEvent());
 		FMLCommonHandler.instance().bus().register(new SaladEatEvent());
+		FMLCommonHandler.instance().bus().register(new PizzaOnCraftEvent());
+		
+		serverProxy.registerRenderThings();
 	}
 
 	@EventHandler
-	public static void init(FMLInitializationEvent event) {
+	public void init(FMLInitializationEvent event) {	
+		GameRegistry.addRecipe(new ItemStack(reConcrete, 8), new Object[]{"ccc", "csc", "ccc", 'c', concrete, 's', steelIngot});
+		GameRegistry.addRecipe(new ItemStack(concrete, 4), new Object[]{"cg", 'c', cement, 'g', Blocks.gravel});
+		GameRegistry.addRecipe(new ItemStack(cement), new Object[]{"ci", "gb", 'c', Items.clay_ball, 'i', Blocks.iron_ore, 'g', Blocks.gravel, 'b', Items.bucket});
+		GameRegistry.addRecipe(new ItemStack(pizza), new Object[]{"sss", "ccc", "www", 's', Items.cooked_beef, 'c', cheese, 'w', Items.wheat});
+		GameRegistry.addRecipe(new ItemStack(asphalt, 3), new Object[]{"ss", "st", 's', Blocks.stone, 't', Items.clay_ball});
+		GameRegistry.addRecipe(new ItemStack(xray), new Object[]{"ggg", "g g", "sgs", 'g', Blocks.glass, 's', Blocks.stone});
 		GameRegistry.addRecipe(new ItemStack(cheese, 4), new Object[]{"c", 'c', cheeseBlock});
 		GameRegistry.addRecipe(new ItemStack(rubber, 4), new Object[]{"r", 'r', rubberBlock});
 		GameRegistry.addRecipe(new ItemStack(cheeseBlock), new Object[]{"cc", "cc", 'c', cheese});
@@ -350,14 +395,28 @@ public class StuffCraft {
 	}
 	
 	@EventHandler
-	public static void postInit(FMLPostInitializationEvent event) {
-
+	public void postInit(FMLPostInitializationEvent event) {
+		
 	}
 	
-	public static CreativeTabs tabStuffCraft = new CreativeTabs("tabStuffCraft") {
+	public static CreativeTabs tabStuffCraftBlocks = new CreativeTabs("tabStuffCraftBlocks") {
+		@Override
+		public Item getTabIconItem() {
+			return new ItemStack(cheeseBlock).getItem();
+		}
+	};
+	
+	public static CreativeTabs tabStuffCraftItems = new CreativeTabs("tabStuffCraftItems") {
 		@Override
 		public Item getTabIconItem() {
 			return new ItemStack(emeraldPickaxe).getItem();
+		}
+	};
+	
+	public static CreativeTabs tabStuffCraftFood = new CreativeTabs("tabStuffCraftFood") {
+		@Override
+		public Item getTabIconItem() {
+			return new ItemStack(pizza).getItem();
 		}
 	};
 	

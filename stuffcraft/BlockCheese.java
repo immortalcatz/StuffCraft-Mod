@@ -7,6 +7,12 @@ public class BlockCheese extends Block {
 
 	public BlockCheese(Material material) {
 		super(material);
+		this.setLightOpacity(14);
+	}
+	
+	@Override
+	public boolean isOpaqueCube() {
+		return false;
 	}
 
 }
